@@ -3,6 +3,13 @@ name = "drv8833"
 version = "0.1.0"
 edition = "2021"
 
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+inline_always = "allow"
+pedantic = { level = "warn", priority = -1 }
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+
 [dependencies]
 esp-idf-svc = { version = "0.50" }
 anyhow = "1.0.95"

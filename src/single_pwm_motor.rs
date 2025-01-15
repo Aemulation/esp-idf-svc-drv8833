@@ -77,6 +77,8 @@ impl<'d, C1, C2, T> SinglePwmMotor<'d, T, C1, C2> {
 
         Ok(())
     }
+
+    #[must_use]
     pub fn max_duty(&self) -> u32 {
         self.in1.get_max_duty()
     }
@@ -117,6 +119,7 @@ impl<'d, T, C1, C2> PwmMotor for SinglePwmMotor<'d, T, C1, C2> {
         self.brake()
     }
 
+    #[must_use]
     fn max_duty(&self) -> u32 {
         self.max_duty()
     }

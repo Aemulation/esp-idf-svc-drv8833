@@ -2,6 +2,7 @@ use anyhow::Result;
 
 pub mod single_motor;
 pub mod single_pwm_motor;
+pub mod sleep;
 
 pub trait Motor {
     fn forward(&mut self) -> Result<()>;
