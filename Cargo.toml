@@ -1,0 +1,11 @@
+[package]
+name = "drv8833"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+esp-idf-svc = { version = "0.50" }
+anyhow = "1.0.95"
+
+[build-dependencies]
+embuild = "0.33"
