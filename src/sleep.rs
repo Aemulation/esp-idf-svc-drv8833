@@ -4,8 +4,6 @@ use esp_idf_svc::hal::{
     peripheral::PeripheralRef,
 };
 
-use crate::{single_motor::SingleMotor, Motor};
-
 use anyhow::Result;
 
 pub struct Sleep<'d> {
