@@ -1,4 +1,4 @@
-use super::{Motor, PwmMotor};
+use super::{BidirectionalPwmMotor, DirectionalPwmMotor};
 use std::marker::PhantomData;
 
 use anyhow::Result;
@@ -8,7 +8,7 @@ use esp_idf_svc::hal::{
     peripheral::Peripheral,
 };
 
-pub struct SinglePwmMotor<'d, T, C1, C2> {
+pub struct BidirectionalPwmMotorDriver<'d, T, C1, C2> {
     in1: LedcDriver<'d>,
     in2: LedcDriver<'d>,
 
@@ -17,7 +17,7 @@ pub struct SinglePwmMotor<'d, T, C1, C2> {
     _channel2: PhantomData<C2>,
 }
 
-impl<'d, C1, C2, T> SinglePwmMotor<'d, T, C1, C2> {
+impl<'d, C1, C2, T> BidirectionalPwmMotorDriver<'d, T, C1, C2> {
     pub fn new(
         in1: impl Peripheral<P = impl OutputPin> + 'd,
         in2: impl Peripheral<P = impl OutputPin> + 'd,
@@ -49,78 +49,53 @@ impl<'d, C1, C2, T> SinglePwmMotor<'d, T, C1, C2> {
             _channel2: PhantomData::<C2>,
         })
     }
+}
 
-    pub fn forward(&mut self, duty: u32) -> Result<()> {
+impl<T, C1, C2> DirectionalPwmMotor for BidirectionalPwmMotorDriver<'_, T, C1, C2> {
+    fn start(&mut self, duty: u32) -> Result<()> {
+        self.forward(duty)
+    }
+
+    fn stop(&mut self) -> Result<()> {
+        self.brake()
+    }
+
+    fn max_duty(&self) -> u32 {
+        BidirectionalPwmMotor::max_duty(self)
+    }
+}
+
+impl<T, C1, C2> BidirectionalPwmMotor for BidirectionalPwmMotorDriver<'_, T, C1, C2> {
+    #[must_use]
+    fn max_duty(&self) -> u32 {
+        self.in1.get_max_duty()
+    }
+
+    fn forward(&mut self, duty: u32) -> Result<()> {
         self.in1.set_duty(duty)?;
         self.in2.disable()?;
 
         Ok(())
     }
 
-    pub fn backward(&mut self, duty: u32) -> Result<()> {
+    fn backward(&mut self, duty: u32) -> Result<()> {
         self.in1.disable()?;
         self.in2.set_duty(duty)?;
 
         Ok(())
     }
 
-    pub fn coast(&mut self) -> Result<()> {
-        self.in1.disable()?;
-        self.in2.disable()?;
-
-        Ok(())
-    }
-
-    pub fn brake(&mut self) -> Result<()> {
+    fn brake(&mut self) -> Result<()> {
         self.in1.enable()?;
         self.in2.enable()?;
 
         Ok(())
     }
 
-    #[must_use]
-    pub fn max_duty(&self) -> u32 {
-        self.in1.get_max_duty()
-    }
-}
-
-impl<'d, T, C1, C2> Motor for SinglePwmMotor<'d, T, C1, C2> {
-    fn forward(&mut self) -> Result<()> {
-        self.forward(self.max_duty())
-    }
-
-    fn backward(&mut self) -> Result<()> {
-        self.backward(self.max_duty())
-    }
-
-    fn brake(&mut self) -> Result<()> {
-        self.brake()
-    }
-
     fn coast(&mut self) -> Result<()> {
-        self.coast()
-    }
-}
+        self.in1.disable()?;
+        self.in2.disable()?;
 
-impl<'d, T, C1, C2> PwmMotor for SinglePwmMotor<'d, T, C1, C2> {
-    fn forward(&mut self, duty: u32) -> Result<()> {
-        self.forward(duty)
-    }
-
-    fn backward(&mut self, duty: u32) -> Result<()> {
-        self.backward(duty)
-    }
-
-    fn coast(&mut self) -> Result<()> {
-        self.coast()
-    }
-
-    fn brake(&mut self) -> Result<()> {
-        self.brake()
-    }
-
-    #[must_use]
-    fn max_duty(&self) -> u32 {
-        self.max_duty()
+        Ok(())
     }
 }

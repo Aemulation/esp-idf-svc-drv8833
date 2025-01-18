@@ -1,4 +1,4 @@
-use super::Motor;
+use super::BidirectionalMotor;
 
 use anyhow::Result;
 use esp_idf_svc::hal::{
@@ -6,15 +6,15 @@ use esp_idf_svc::hal::{
     peripheral::PeripheralRef,
 };
 
-pub struct SingleMotor<'d> {
+pub struct BidirectionalMotorDriver<'d> {
     in1: PinDriver<'d, AnyOutputPin, Output>,
     in2: PinDriver<'d, AnyOutputPin, Output>,
 }
 
-unsafe impl Sync for SingleMotor<'static> {}
-unsafe impl Send for SingleMotor<'static> {}
+unsafe impl Sync for BidirectionalMotorDriver<'static> {}
+unsafe impl Send for BidirectionalMotorDriver<'static> {}
 
-impl<'d> SingleMotor<'d> {
+impl<'d> BidirectionalMotorDriver<'d> {
     pub fn new(
         in1: PeripheralRef<'d, AnyOutputPin>,
         in2: PeripheralRef<'d, AnyOutputPin>,
@@ -24,50 +24,34 @@ impl<'d> SingleMotor<'d> {
 
         Ok(Self { in1, in2 })
     }
-
-    pub fn forward(&mut self) -> Result<()> {
-        self.in1.set_high()?;
-        self.in2.set_low()?;
-
-        Ok(())
-    }
-
-    pub fn backward(&mut self) -> Result<()> {
-        self.in1.set_low()?;
-        self.in2.set_high()?;
-
-        Ok(())
-    }
-
-    pub fn brake(&mut self) -> Result<()> {
-        self.in1.set_high()?;
-        self.in2.set_high()?;
-
-        Ok(())
-    }
-
-    pub fn coast(&mut self) -> Result<()> {
-        self.in1.set_low()?;
-        self.in2.set_low()?;
-
-        Ok(())
-    }
 }
 
-impl Motor for SingleMotor<'_> {
+impl BidirectionalMotor for BidirectionalMotorDriver<'_> {
     fn forward(&mut self) -> Result<()> {
-        self.forward()
+        self.in1.set_high()?;
+        self.in2.set_low()?;
+
+        Ok(())
     }
 
     fn backward(&mut self) -> Result<()> {
-        self.backward()
+        self.in1.set_low()?;
+        self.in2.set_high()?;
+
+        Ok(())
     }
 
     fn brake(&mut self) -> Result<()> {
-        self.brake()
+        self.in1.set_high()?;
+        self.in2.set_high()?;
+
+        Ok(())
     }
 
     fn coast(&mut self) -> Result<()> {
-        self.coast()
+        self.in1.set_low()?;
+        self.in2.set_low()?;
+
+        Ok(())
     }
 }
