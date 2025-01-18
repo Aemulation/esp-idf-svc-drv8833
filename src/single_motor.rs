@@ -11,6 +11,9 @@ pub struct SingleMotor<'d> {
     in2: PinDriver<'d, AnyOutputPin, Output>,
 }
 
+unsafe impl Sync for SingleMotor<'static> {}
+unsafe impl Send for SingleMotor<'static> {}
+
 impl<'d> SingleMotor<'d> {
     pub fn new(
         in1: PeripheralRef<'d, AnyOutputPin>,
@@ -51,7 +54,7 @@ impl<'d> SingleMotor<'d> {
     }
 }
 
-impl<'d> Motor for SingleMotor<'d> {
+impl Motor for SingleMotor<'_> {
     fn forward(&mut self) -> Result<()> {
         self.forward()
     }
