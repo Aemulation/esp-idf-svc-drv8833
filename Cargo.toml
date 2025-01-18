@@ -11,7 +11,7 @@ missing_errors_doc = "allow"
 missing_panics_doc = "allow"
 
 [dependencies]
-esp-idf-svc = { version = "0.50" }
+esp-idf-svc = { version = "0.51" }
 anyhow = "1.0.95"
 
 [build-dependencies]
