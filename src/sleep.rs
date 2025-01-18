@@ -41,4 +41,17 @@ impl<'d> Sleep<'d> {
 
         Ok(())
     }
+
+    pub fn do_while_awake<F, U>(&mut self, function: F) -> Result<U>
+    where
+        F: FnOnce() -> U,
+    {
+        self.wakeup()?;
+
+        let result = function();
+
+        self.sleep()?;
+
+        Ok(result)
+    }
 }
