@@ -9,7 +9,7 @@ use drv8833::directional_motor::DirectionalMotorDriver;
 use drv8833::directional_pwm_motor::DirectionalPwmMotorDriver;
 use drv8833::{BidirectionalMotor, BidirectionalPwmMotor, DirectionalMotor, DirectionalPwmMotor};
 use esp_idf_svc::hal::delay::FreeRtos;
-use esp_idf_svc::hal::gpio::OutputPin;
+use esp_idf_svc::hal::gpio::{OutputPin, PinDriver};
 use esp_idf_svc::hal::ledc::{config::TimerConfig, LedcChannel, LedcTimer, LedcTimerDriver};
 use esp_idf_svc::hal::peripheral::Peripheral;
 use esp_idf_svc::hal::peripherals::Peripherals;
@@ -27,7 +27,7 @@ fn directional_motor_test(pin1: impl Peripheral<P = impl OutputPin>) -> Result<(
 
     log::info!("Stopping...");
     motor.stop()?;
-    FreeRtos::delay_ms(3_000);
+    FreeRtos::delay_ms(5_000);
 
     Ok(())
 }
@@ -77,7 +77,7 @@ where
 
     log::info!("Stopping...");
     DirectionalPwmMotor::stop(&mut pwm_motor)?;
-    FreeRtos::delay_ms(500);
+    FreeRtos::delay_ms(5_000);
 
     Ok(())
 }
@@ -106,7 +106,7 @@ where
 
     log::info!("Coasting...");
     pwm_motor.coast()?;
-    FreeRtos::delay_ms(500);
+    FreeRtos::delay_ms(5_000);
 
     log::info!("Backward...");
     pwm_motor.backward(duty)?;
@@ -114,7 +114,7 @@ where
 
     log::info!("Coasting...");
     pwm_motor.coast()?;
-    FreeRtos::delay_ms(500);
+    FreeRtos::delay_ms(5_000);
 
     Ok(())
 }
@@ -131,11 +131,11 @@ fn main() -> Result<()> {
 
     let peripherals = Peripherals::take()?;
 
-    let mut pin_4 = peripherals.pins.gpio4.into_ref();
-    let mut pin_16 = peripherals.pins.gpio16.into_ref();
-    let mut pin_17 = peripherals.pins.gpio17.into_ref();
+    let mut pin9 = peripherals.pins.gpio9.into_ref();
+    let mut pin8 = peripherals.pins.gpio8.into_ref();
+    let pin7 = peripherals.pins.gpio7.into_ref();
 
-    let mut sleep = Sleep::new(pin_4.reborrow())?;
+    let mut sleep = Sleep::new(pin7)?;
 
     if sleep.asleep() {
         log::warn!("Currently sleeping, waking up...");
@@ -143,9 +143,13 @@ fn main() -> Result<()> {
     }
 
     log::warn!("Starting directional motor test");
-    directional_motor_test(pin_17.reborrow())?;
+    {
+        let mut driver = PinDriver::output_od(pin8.reborrow())?;
+        driver.set_low()?;
+        directional_motor_test(pin9.reborrow())?;
+    }
     log::warn!("Starting bidirectional motor test");
-    bidirectional_motor_test(pin_16.reborrow(), pin_17.reborrow())?;
+    bidirectional_motor_test(pin9.reborrow(), pin8.reborrow())?;
 
     log::warn!("Going to sleep for 5 seconds");
     sleep.sleep()?;
@@ -159,11 +163,15 @@ fn main() -> Result<()> {
     let mut channel1 = peripherals.ledc.channel1.into_ref();
 
     log::warn!("Starting directional PWM motor test");
-    directional_pwm_motor_test(pin_17.reborrow(), &timer_driver, channel0.reborrow())?;
+    {
+        let mut driver = PinDriver::output_od(pin8.reborrow())?;
+        driver.set_low()?;
+        directional_pwm_motor_test(pin9.reborrow(), &timer_driver, channel0.reborrow())?;
+    }
     log::warn!("Starting bidirectional PWM motor test");
     bidirectional_pwm_motor_test(
-        pin_16.reborrow(),
-        pin_17.reborrow(),
+        pin9.reborrow(),
+        pin8.reborrow(),
         &timer_driver,
         channel0.reborrow(),
         channel1.reborrow(),
