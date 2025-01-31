@@ -9,16 +9,16 @@ use drv8833::directional_motor::DirectionalMotorDriver;
 use drv8833::directional_pwm_motor::DirectionalPwmMotorDriver;
 use drv8833::{BidirectionalMotor, BidirectionalPwmMotor, DirectionalMotor, DirectionalPwmMotor};
 use esp_idf_svc::hal::delay::FreeRtos;
-use esp_idf_svc::hal::gpio::AnyOutputPin;
+use esp_idf_svc::hal::gpio::OutputPin;
 use esp_idf_svc::hal::ledc::{config::TimerConfig, LedcChannel, LedcTimer, LedcTimerDriver};
-use esp_idf_svc::hal::peripheral::{Peripheral, PeripheralRef};
+use esp_idf_svc::hal::peripheral::Peripheral;
 use esp_idf_svc::hal::peripherals::Peripherals;
 
 use drv8833::sleep::Sleep;
 
 use anyhow::Result;
 
-fn directional_motor_test(pin1: PeripheralRef<'_, AnyOutputPin>) -> Result<()> {
+fn directional_motor_test(pin1: impl Peripheral<P = impl OutputPin>) -> Result<()> {
     let mut motor = DirectionalMotorDriver::new(pin1)?;
 
     log::info!("Forward...");
@@ -32,9 +32,9 @@ fn directional_motor_test(pin1: PeripheralRef<'_, AnyOutputPin>) -> Result<()> {
     Ok(())
 }
 
-fn bidirectional_motor_test<'d>(
-    pin1: PeripheralRef<'d, AnyOutputPin>,
-    pin2: PeripheralRef<'d, AnyOutputPin>,
+fn bidirectional_motor_test(
+    pin1: impl Peripheral<P = impl OutputPin>,
+    pin2: impl Peripheral<P = impl OutputPin>,
 ) -> Result<()> {
     let mut motor = BidirectionalMotorDriver::new(pin1, pin2)?;
 
@@ -57,13 +57,13 @@ fn bidirectional_motor_test<'d>(
     Ok(())
 }
 
-fn directional_pwm_motor_test<'d, T, C1>(
-    pin1: PeripheralRef<'d, AnyOutputPin>,
-    timer_driver: &LedcTimerDriver<'d, T>,
+fn directional_pwm_motor_test<T, C1>(
+    pin1: impl Peripheral<P = impl OutputPin>,
+    timer_driver: &LedcTimerDriver<T>,
     channel1: impl Peripheral<P = C1>,
 ) -> Result<()>
 where
-    T: LedcTimer + 'd,
+    T: LedcTimer,
     C1: LedcChannel<SpeedMode = <T as LedcTimer>::SpeedMode>,
 {
     let mut pwm_motor = DirectionalPwmMotorDriver::new(pin1, timer_driver, channel1)?;
@@ -82,15 +82,15 @@ where
     Ok(())
 }
 
-fn bidirectional_pwm_motor_test<'d, T, C1, C2>(
-    pin1: PeripheralRef<'d, AnyOutputPin>,
-    pin2: PeripheralRef<'d, AnyOutputPin>,
-    timer_driver: &LedcTimerDriver<'d, T>,
+fn bidirectional_pwm_motor_test<T, C1, C2>(
+    pin1: impl Peripheral<P = impl OutputPin>,
+    pin2: impl Peripheral<P = impl OutputPin>,
+    timer_driver: &LedcTimerDriver<T>,
     channel1: impl Peripheral<P = C1>,
     channel2: impl Peripheral<P = C2>,
 ) -> Result<()>
 where
-    T: LedcTimer + 'd,
+    T: LedcTimer,
     C1: LedcChannel<SpeedMode = <T as LedcTimer>::SpeedMode>,
     C2: LedcChannel<SpeedMode = <T as LedcTimer>::SpeedMode>,
 {
@@ -135,7 +135,7 @@ fn main() -> Result<()> {
     let mut pin_16 = peripherals.pins.gpio16.into_ref();
     let mut pin_17 = peripherals.pins.gpio17.into_ref();
 
-    let mut sleep = Sleep::new(pin_4.reborrow().map_into())?;
+    let mut sleep = Sleep::new(pin_4.reborrow())?;
 
     if sleep.asleep() {
         log::warn!("Currently sleeping, waking up...");
@@ -143,9 +143,9 @@ fn main() -> Result<()> {
     }
 
     log::warn!("Starting directional motor test");
-    directional_motor_test(pin_16.reborrow().map_into())?;
+    directional_motor_test(pin_17.reborrow())?;
     log::warn!("Starting bidirectional motor test");
-    bidirectional_motor_test(pin_16.reborrow().map_into(), pin_17.reborrow().map_into())?;
+    bidirectional_motor_test(pin_16.reborrow(), pin_17.reborrow())?;
 
     log::warn!("Going to sleep for 5 seconds");
     sleep.sleep()?;
@@ -159,15 +159,11 @@ fn main() -> Result<()> {
     let mut channel1 = peripherals.ledc.channel1.into_ref();
 
     log::warn!("Starting directional PWM motor test");
-    directional_pwm_motor_test(
-        pin_16.reborrow().map_into(),
-        &timer_driver,
-        channel0.reborrow(),
-    )?;
+    directional_pwm_motor_test(pin_17.reborrow(), &timer_driver, channel0.reborrow())?;
     log::warn!("Starting bidirectional PWM motor test");
     bidirectional_pwm_motor_test(
-        pin_16.reborrow().map_into(),
-        pin_17.reborrow().map_into(),
+        pin_16.reborrow(),
+        pin_17.reborrow(),
         &timer_driver,
         channel0.reborrow(),
         channel1.reborrow(),
