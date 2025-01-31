@@ -2,8 +2,8 @@ use super::DirectionalMotor;
 
 use anyhow::Result;
 use esp_idf_svc::hal::{
-    gpio::{AnyOutputPin, Output, PinDriver},
-    peripheral::PeripheralRef,
+    gpio::{AnyOutputPin, Output, OutputPin, PinDriver},
+    peripheral::Peripheral,
 };
 
 pub struct DirectionalMotorDriver<'d> {
@@ -14,8 +14,8 @@ unsafe impl Sync for DirectionalMotorDriver<'static> {}
 unsafe impl Send for DirectionalMotorDriver<'static> {}
 
 impl<'d> DirectionalMotorDriver<'d> {
-    pub fn new(in1: PeripheralRef<'d, AnyOutputPin>) -> Result<Self> {
-        let in1 = PinDriver::output(in1)?;
+    pub fn new(in1: impl Peripheral<P = impl OutputPin> + 'd) -> Result<Self> {
+        let in1 = PinDriver::output(in1.into_ref().map_into())?;
 
         Ok(Self { in1 })
     }

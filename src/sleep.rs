@@ -1,7 +1,7 @@
 use esp_idf_svc::hal::{
     delay::FreeRtos,
-    gpio::{AnyOutputPin, Output, PinDriver},
-    peripheral::PeripheralRef,
+    gpio::{AnyOutputPin, Output, OutputPin, PinDriver},
+    peripheral::Peripheral,
 };
 
 use anyhow::Result;
@@ -11,9 +11,9 @@ pub struct Sleep<'d> {
 }
 
 impl<'d> Sleep<'d> {
-    pub fn new(sleep_pin: PeripheralRef<'d, AnyOutputPin>) -> Result<Self> {
+    pub fn new(sleep_pin: impl Peripheral<P = impl OutputPin> + 'd) -> Result<Self> {
         Ok(Self {
-            pin: PinDriver::output(sleep_pin)?,
+            pin: PinDriver::output(sleep_pin.into_ref().map_into())?,
         })
     }
 

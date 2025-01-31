@@ -2,8 +2,8 @@ use super::BidirectionalMotor;
 
 use anyhow::Result;
 use esp_idf_svc::hal::{
-    gpio::{AnyOutputPin, Output, PinDriver},
-    peripheral::PeripheralRef,
+    gpio::{AnyOutputPin, Output, OutputPin, PinDriver},
+    peripheral::Peripheral,
 };
 
 pub struct BidirectionalMotorDriver<'d> {
@@ -16,11 +16,11 @@ unsafe impl Send for BidirectionalMotorDriver<'static> {}
 
 impl<'d> BidirectionalMotorDriver<'d> {
     pub fn new(
-        in1: PeripheralRef<'d, AnyOutputPin>,
-        in2: PeripheralRef<'d, AnyOutputPin>,
+        in1: impl Peripheral<P = impl OutputPin> + 'd,
+        in2: impl Peripheral<P = impl OutputPin> + 'd,
     ) -> Result<Self> {
-        let in1 = PinDriver::output(in1)?;
-        let in2 = PinDriver::output(in2)?;
+        let in1 = PinDriver::output(in1.into_ref().map_into())?;
+        let in2 = PinDriver::output(in2.into_ref().map_into())?;
 
         Ok(Self { in1, in2 })
     }
