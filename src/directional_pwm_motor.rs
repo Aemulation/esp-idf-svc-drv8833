@@ -58,7 +58,7 @@ impl<T, C1> DirectionalPwmMotor for DirectionalPwmMotorDriver<'_, T, C1> {
     }
 
     fn stop(&mut self) -> Result<()> {
-        self.in1.disable()?;
+        self.in1.set_duty(0)?;
 
         Ok(())
     }
