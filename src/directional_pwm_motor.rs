@@ -2,6 +2,7 @@ use super::{DirectionalMotor, DirectionalPwmMotor};
 use std::marker::PhantomData;
 
 use anyhow::Result;
+use embedded_hal::pwm::SetDutyCycle;
 use esp_idf_svc::hal::{
     gpio::OutputPin,
     ledc::{LedcChannel, LedcDriver, LedcTimer, LedcTimerDriver},
@@ -47,18 +48,18 @@ impl<T, C1> DirectionalMotor for DirectionalPwmMotorDriver<'_, T, C1> {
 
 impl<T, C1> DirectionalPwmMotor for DirectionalPwmMotorDriver<'_, T, C1> {
     #[must_use]
-    fn max_duty(&self) -> u32 {
-        self.in1.get_max_duty()
+    fn max_duty(&self) -> u16 {
+        self.in1.max_duty_cycle()
     }
 
-    fn start(&mut self, duty: u32) -> Result<()> {
+    fn start(&mut self, duty: u16) -> Result<()> {
         self.in1.set_duty_cycle(duty)?;
 
         Ok(())
     }
 
     fn stop(&mut self) -> Result<()> {
-        self.in1.set_duty_cycle(0)?;
+        self.in1.set_duty_cycle_fully_off()?;
 
         Ok(())
     }

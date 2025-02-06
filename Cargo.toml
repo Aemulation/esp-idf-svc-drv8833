@@ -1,6 +1,6 @@
 [package]
 name = "drv8833"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 
 [workspace.lints.clippy]
@@ -13,6 +13,7 @@ missing_panics_doc = "allow"
 [dependencies]
 esp-idf-svc = { version = "0.51" }
 anyhow = "1.0.95"
+embedded-hal = "1.0.0"
 
 [build-dependencies]
 embuild = "0.33"

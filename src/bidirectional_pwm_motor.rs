@@ -2,6 +2,7 @@ use super::{BidirectionalPwmMotor, DirectionalPwmMotor};
 use std::marker::PhantomData;
 
 use anyhow::Result;
+use embedded_hal::pwm::SetDutyCycle;
 use esp_idf_svc::hal::{
     gpio::OutputPin,
     ledc::{LedcChannel, LedcDriver, LedcTimer, LedcTimerDriver},
@@ -52,7 +53,7 @@ impl<'d, C1, C2, T> BidirectionalPwmMotorDriver<'d, T, C1, C2> {
 }
 
 impl<T, C1, C2> DirectionalPwmMotor for BidirectionalPwmMotorDriver<'_, T, C1, C2> {
-    fn start(&mut self, duty: u32) -> Result<()> {
+    fn start(&mut self, duty: u16) -> Result<()> {
         self.forward(duty)
     }
 
@@ -60,41 +61,41 @@ impl<T, C1, C2> DirectionalPwmMotor for BidirectionalPwmMotorDriver<'_, T, C1, C
         self.brake()
     }
 
-    fn max_duty(&self) -> u32 {
+    fn max_duty(&self) -> u16 {
         BidirectionalPwmMotor::max_duty(self)
     }
 }
 
 impl<T, C1, C2> BidirectionalPwmMotor for BidirectionalPwmMotorDriver<'_, T, C1, C2> {
     #[must_use]
-    fn max_duty(&self) -> u32 {
-        self.in1.get_max_duty()
+    fn max_duty(&self) -> u16 {
+        self.in1.max_duty_cycle()
     }
 
-    fn forward(&mut self, duty: u32) -> Result<()> {
+    fn forward(&mut self, duty: u16) -> Result<()> {
         self.in1.set_duty_cycle(duty)?;
-        self.in2.disable()?;
+        self.in2.set_duty_cycle_fully_off()?;
 
         Ok(())
     }
 
-    fn backward(&mut self, duty: u32) -> Result<()> {
-        self.in1.disable()?;
+    fn backward(&mut self, duty: u16) -> Result<()> {
+        self.in1.set_duty_cycle_fully_off()?;
         self.in2.set_duty_cycle(duty)?;
 
         Ok(())
     }
 
     fn brake(&mut self) -> Result<()> {
-        self.in1.enable()?;
-        self.in2.enable()?;
+        self.in1.set_duty_cycle_fully_on()?;
+        self.in2.set_duty_cycle_fully_on()?;
 
         Ok(())
     }
 
     fn coast(&mut self) -> Result<()> {
-        self.in1.disable()?;
-        self.in2.disable()?;
+        self.in1.set_duty_cycle_fully_off()?;
+        self.in2.set_duty_cycle_fully_off()?;
 
         Ok(())
     }

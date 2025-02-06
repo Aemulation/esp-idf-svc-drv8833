@@ -23,21 +23,21 @@ pub trait BidirectionalMotor {
 }
 
 pub trait DirectionalPwmMotor {
-    fn start(&mut self, duty: u32) -> Result<()>;
+    fn start(&mut self, duty: u16) -> Result<()>;
 
     fn stop(&mut self) -> Result<()>;
 
-    fn max_duty(&self) -> u32;
+    fn max_duty(&self) -> u16;
 }
 
 pub trait BidirectionalPwmMotor {
-    fn forward(&mut self, duty: u32) -> Result<()>;
+    fn forward(&mut self, duty: u16) -> Result<()>;
 
-    fn backward(&mut self, duty: u32) -> Result<()>;
+    fn backward(&mut self, duty: u16) -> Result<()>;
 
     fn brake(&mut self) -> Result<()>;
 
     fn coast(&mut self) -> Result<()>;
 
-    fn max_duty(&self) -> u32;
+    fn max_duty(&self) -> u16;
 }
