@@ -72,7 +72,7 @@ impl<T, C1, C2> BidirectionalPwmMotor for BidirectionalPwmMotorDriver<'_, T, C1,
     }
 
     fn forward(&mut self, duty: u32) -> Result<()> {
-        self.in1.set_duty(duty)?;
+        self.in1.set_duty_cycle(duty)?;
         self.in2.disable()?;
 
         Ok(())
@@ -80,7 +80,7 @@ impl<T, C1, C2> BidirectionalPwmMotor for BidirectionalPwmMotorDriver<'_, T, C1,
 
     fn backward(&mut self, duty: u32) -> Result<()> {
         self.in1.disable()?;
-        self.in2.set_duty(duty)?;
+        self.in2.set_duty_cycle(duty)?;
 
         Ok(())
     }

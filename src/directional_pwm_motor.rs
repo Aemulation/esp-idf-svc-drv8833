@@ -52,13 +52,13 @@ impl<T, C1> DirectionalPwmMotor for DirectionalPwmMotorDriver<'_, T, C1> {
     }
 
     fn start(&mut self, duty: u32) -> Result<()> {
-        self.in1.set_duty(duty)?;
+        self.in1.set_duty_cycle(duty)?;
 
         Ok(())
     }
 
     fn stop(&mut self) -> Result<()> {
-        self.in1.set_duty(0)?;
+        self.in1.set_duty_cycle(0)?;
 
         Ok(())
     }
